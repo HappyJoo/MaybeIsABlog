@@ -1,5 +1,12 @@
 #-*- coding:utf-8 -*-
 import pygame
+import time
+import numpy as np
+from pygame.locals import *
+
+BOARDWIDTH = 48
+BOARDHEIGHT = 28
+score = 0
 
 #Here begin the Snake~
 class Snack(object):
@@ -51,21 +58,21 @@ class Snack(object):
         width = 10
         color = 255, 255, 0
         for i, j in self.item[1:]:
-            position = 10 + 20 + i, 10 + 20 + j
+            position = 10 + 20 * i, 10 + 20 * j
             pygame.draw.circle(screen, color, position, radius, width)
 
 
 #then is food class
 class Food(object):
     def __init__(self):
-        self.item = (4, 5)
+        self.item = np.random.randint(3, 20), np.random.randint(3, 20)
 
     def _draw(self, screen, i, j):
         color = 255, 0, 255
         radius = 10
         width = 10
         position = 10 + 20 * i, 10 + 20 * j
-        python.draw.circle(screen, color, position, radius, width)
+        pygame.draw.circle(screen, color, position, radius, width)
 
     def update(self, screen, enlarge, snack):
         if enlarge:
@@ -73,6 +80,7 @@ class Food(object):
             while self.item in snack.item:
                 self.item = np.random.randint(1, BOARDWIDTH -2), np.random.randint(1, BOARDHEIGHT - 2)
         self._draw(screen, self.item[0], self.item[1])
+
 
 #init_board
 def init_board(screen):
@@ -85,13 +93,14 @@ def init_board(screen):
         pos = i * 20, 0, 20, 20
         pygame.draw.rect(screen, color, pos, width)
         pos = i * 20, (board_height -1) * 20, 20, 20
-        pygame.darw.rect(screen, color, pos, width)
+        pygame.draw.rect(screen, color, pos, width)
 
     for i in range(board_height - 1):
         pos = 0, 20 + i * 20, 20, 20
         pygame.draw.rect(screen, color, pos, width)
         pos = (board_width -1) * 20, 20 + i * 20, 20, 20
         pygame.draw.rect(screen, color, pos, width)
+
 
 #if game lose
 def game_over(snack):
@@ -100,7 +109,7 @@ def game_over(snack):
     old = len(snack.item)
     new = len(set(snack.item))
 
-    if new > old:
+    if new < old:
         flag = 1
 
     if broad_x == 0 or broad_x == BOARDWIDTH -1:
@@ -113,6 +122,7 @@ def game_over(snack):
     else:
         return False
 
+
 def game_init():
     pygame.init()
     #set the game's screen use pygame.display.set_mode function
@@ -120,6 +130,7 @@ def game_init():
     #use pygame.display.set_caption to create caption
     pygame.display.set_caption('Snack Game')
     return screen
+
 
 def game(screen):
     #set snack to an instance of class Snack
@@ -148,9 +159,45 @@ def game(screen):
             print_text(screen, font, 0, 0, text)
             food.update(screen, enlarge, snack)
             snack.move(enlarge)
-            is_fail = game.over(snack = snack)
+            is_fail = game_over(snack = snack)
             snack.draw(screen)
         #refresh
         pygame.display.update()
         time.sleep(0.1)
 
+
+def print_text(screen, font, x, y, text, color=(255, 0, 0)):
+    imgText = font.render(text, True, color)
+    screen.blit(imgText, (x, y))
+
+
+def press(keys, snack):
+    global score
+    #move UP
+    if keys[K_w] or keys[K_UP]:
+        snack.toward(0, -1)
+    #move DOWN
+    elif keys[K_s] or keys[K_DOWN]:
+        snack.toward(0, 1)
+    #move LEFT
+    elif keys[K_a] or keys[K_LEFT]:
+        snack.toward(-1, 0)
+    #move RIGHT
+    elif keys[K_d] or keys[K_RIGHT]:
+        snack.toward(1, 0)
+    #restart
+    elif keys[K_r]:
+        score = 0
+        main()
+    #exit game
+    elif keys[K_ESCAPE]:
+        exit()
+
+
+def main():
+    screen = game_init()
+    game(screen)
+
+
+if __name__ == '__main__':
+    main()
